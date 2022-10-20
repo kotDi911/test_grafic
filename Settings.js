@@ -53,10 +53,16 @@ class MouseDrawer extends Canvas {
             } else {
                 this.end = this.position;
                 let obj = new Object({start: this.start, end: this.end});
+                /*for (let i = 0; i < arr.length; i++) {
+                    this.point = MouseDrawer.getIntersection(arr[i].start, arr[i].end, this.start, this.end);
+                    if (this.point) {
+                        MouseDrawer.drawDot(this.ctx, this.point)
+                    }
+                }*/
                 arr.push(obj);
             }
             this.saved = this.canvas.toDataURL();
-            this.draw(this.ctx, line);
+            this.drawLine(this.ctx, arr);
         } else {
             this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
             this.ctx.drawImage(this.img, 0, 0, this.canvas.width, this.canvas.height);
@@ -75,13 +81,14 @@ class MouseDrawer extends Canvas {
                 start: this.position,
                 end: currentPosition,
             };
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
             for (let i = 0; i < arr.length; i++) {
                 this.point = MouseDrawer.getIntersection(arr[i].start, arr[i].end, this.position, currentPosition);
                 if (this.point) {
                     MouseDrawer.drawDot(this.ctx, this.point)
                 }
             }
-            this.draw(this.ctx, line);
+            this.drawLine(this.ctx, arr);
         }
     }
 
@@ -89,7 +96,20 @@ class MouseDrawer extends Canvas {
         e.preventDefault();
     }
 
-    draw(ctx, line) {
+    drawLine(ctx, arr) {
+        ctx.beginPath();
+        for (let i = 0; i < arr.length; i++) {
+            let start = arr[i].start;
+            let end = arr[i].end;
+            ctx.moveTo(start.x, start.y);
+            ctx.lineTo(end.x, end.y);
+            // ctx.lineWidth = lineWidth;
+            // ctx.lineCap = lineCap;
+            // ctx.strokeStyle = strokeStyle;
+            ctx.stroke();
+        }
+    }
+    /*draw(ctx, line) {
         const {
             start,
             end,
@@ -113,7 +133,7 @@ class MouseDrawer extends Canvas {
             ctx.strokeStyle = strokeStyle;
             ctx.stroke();
         };
-    }
+    }*/
 
     static drawDot(ctx, point) {
         ctx.beginPath();
