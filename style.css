@@ -1,0 +1,13 @@
+#canvas {
+    display: block;
+    margin: 30px auto;
+    border: 2px solid red;
+}
+
+.btn {
+    margin-left: 4%;
+    border: 2px solid red;
+    color: red;
+    padding: 5px 10px;
+    background: none;
+}
