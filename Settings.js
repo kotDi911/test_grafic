@@ -35,34 +35,35 @@ class MouseDrawer extends Canvas {
     mouseDownHandler(e) {
         if (e.button === 0) {
             this.count = !this.count;
-
             this.ctx.beginPath();
 
             this.position = {
                 x: e.pageX - e.target.offsetLeft,
                 y: e.pageY - e.target.offsetTop
             };
+
             const line = {
                 start: this.position,
                 end: this.position,
             };
-
 
             if (this.count) {
                 this.start = this.position;
             } else {
                 this.end = this.position;
                 let obj = new Object({start: this.start, end: this.end});
-                /*for (let i = 0; i < arr.length; i++) {
+                for (let i = 0; i < arr.length; i++) {
                     this.point = MouseDrawer.getIntersection(arr[i].start, arr[i].end, this.start, this.end);
                     if (this.point) {
                         MouseDrawer.drawDot(this.ctx, this.point)
                     }
-                }*/
+                }
                 arr.push(obj);
             }
+
             this.saved = this.canvas.toDataURL();
-            this.drawLine(this.ctx, arr);
+            this.draw(this.ctx, line);
+            //MouseDrawer.drawLine(this.ctx, arr);
         } else {
             this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
             this.ctx.drawImage(this.img, 0, 0, this.canvas.width, this.canvas.height);
@@ -82,13 +83,16 @@ class MouseDrawer extends Canvas {
                 end: currentPosition,
             };
             this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+            this.draw(this.ctx, line);
+            //MouseDrawer.drawLine(this.ctx, arr);
+
             for (let i = 0; i < arr.length; i++) {
                 this.point = MouseDrawer.getIntersection(arr[i].start, arr[i].end, this.position, currentPosition);
                 if (this.point) {
                     MouseDrawer.drawDot(this.ctx, this.point)
                 }
             }
-            this.drawLine(this.ctx, arr);
         }
     }
 
@@ -96,24 +100,22 @@ class MouseDrawer extends Canvas {
         e.preventDefault();
     }
 
-    drawLine(ctx, arr) {
+    static drawLine(ctx, arr) {
         ctx.beginPath();
         for (let i = 0; i < arr.length; i++) {
             let start = arr[i].start;
             let end = arr[i].end;
             ctx.moveTo(start.x, start.y);
             ctx.lineTo(end.x, end.y);
-            // ctx.lineWidth = lineWidth;
-            // ctx.lineCap = lineCap;
-            // ctx.strokeStyle = strokeStyle;
             ctx.stroke();
         }
     }
-    /*draw(ctx, line) {
+
+    draw(ctx, line) {
         const {
             start,
             end,
-            lineWidth = 5,
+            lineWidth,
             lineCap = 'round',
             strokeStyle
         } = line;
@@ -133,12 +135,12 @@ class MouseDrawer extends Canvas {
             ctx.strokeStyle = strokeStyle;
             ctx.stroke();
         };
-    }*/
+    }
 
     static drawDot(ctx, point) {
         ctx.beginPath();
         ctx.fillStyle = 'red';
-        ctx.arc(point.x, point.y, 10, 0, Math.PI * 2);
+        ctx.arc(point.x, point.y, 5, 0, Math.PI * 2);
         ctx.fill();
         ctx.stroke();
         ctx.fillStyle = 'black';
