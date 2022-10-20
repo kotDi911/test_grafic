@@ -1,7 +1,7 @@
 const canvasRef = document.querySelector('#canvas');
 let arr = [];
 
-class Tool {
+class Canvas {
     constructor(canvas) {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
@@ -17,7 +17,7 @@ class Tool {
     }
 }
 
-class MouseDrawer extends Tool {
+class MouseDrawer extends Canvas {
     constructor(canvas) {
         super(canvas);
         this.position = null;
@@ -29,23 +29,12 @@ class MouseDrawer extends Tool {
     listen() {
         this.canvas.onmousemove = this.mouseMoveHandler.bind(this);
         this.canvas.onmousedown = this.mouseDownHandler.bind(this);
-        this.canvas.onmouseup = this.mouseUpHandler.bind(this);
         this.canvas.oncontextmenu = MouseDrawer.mouseCancelHandler.bind(this);
-    }
-
-    mouseUpHandler(e) {
-        this.mouseDown = false;
     }
 
     mouseDownHandler(e) {
         if (e.button === 0) {
-
-            this.mouseDown = true;
             this.count = !this.count;
-
-            if (this.mouseDown) {
-                this.saved = this.canvas.toDataURL();
-            }
 
             this.ctx.beginPath();
 
@@ -64,18 +53,9 @@ class MouseDrawer extends Tool {
             } else {
                 this.end = this.position;
                 let obj = new Object({start: this.start, end: this.end});
-                /* this.point = {
-                     x: MouseDrawer.lerp(obj.start.x, obj.end.x, 0.5),
-                     y: MouseDrawer.lerp(obj.start.y, obj.end.y, 0.5)
-                 };*/
                 arr.push(obj);
-                /*for (let i=0; i< arr.length; i++){
-                    this.point = MouseDrawer.getIntersection(arr[i].start, arr[i].end, this.start, this.end);
-                    console.log(this.point)
-                    MouseDrawer.drawDot(this.ctx, this.point)
-                }*/
             }
-            console.log(arr);
+            this.saved = this.canvas.toDataURL();
             this.draw(this.ctx, line);
         } else {
             this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -95,7 +75,12 @@ class MouseDrawer extends Tool {
                 start: this.position,
                 end: currentPosition,
             };
-
+            for (let i = 0; i < arr.length; i++) {
+                this.point = MouseDrawer.getIntersection(arr[i].start, arr[i].end, this.position, currentPosition);
+                if (this.point) {
+                    MouseDrawer.drawDot(this.ctx, this.point)
+                }
+            }
             this.draw(this.ctx, line);
         }
     }
@@ -127,14 +112,6 @@ class MouseDrawer extends Tool {
             ctx.lineCap = lineCap;
             ctx.strokeStyle = strokeStyle;
             ctx.stroke();
-
-            for (let i = 0; i < arr.length; ++i) {
-                this.point = MouseDrawer.getIntersection(arr[i].start, arr[i].end, this.start, this.end);
-                console.log(this.point);
-                if (this.point) MouseDrawer.drawDot(this.ctx, this.point);
-            }
-
-            // if (this.point) MouseDrawer.drawDot(this.ctx, this.point);
         };
     }
 
@@ -154,11 +131,17 @@ class MouseDrawer extends Tool {
     static getIntersection(A, B, C, D) {
         const top = (D.x - C.x) * (A.y - C.y) - (D.y - C.y) * (A.x - C.x);
         const bottom = (D.y - C.y) * (B.x - A.x) - (D.x - C.x) * (B.y - A.y);
-        const t = top / bottom;
-        return {
-            x: MouseDrawer.lerp(A.x, B.x, t),
-            y: MouseDrawer.lerp(A.y, B.y, t)
+
+        if (bottom !== 0) {
+            const t = top / bottom;
+            if (t >= 0 && t <= 1) {
+                return {
+                    x: MouseDrawer.lerp(A.x, B.x, t),
+                    y: MouseDrawer.lerp(A.y, B.y, t)
+                }
+            }
         }
+        return null;
     }
 }
 
