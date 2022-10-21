@@ -1,4 +1,5 @@
 const canvasRef = document.querySelector('#canvas');
+const btn = document.querySelector('#collapse');
 let arr = [];
 
 class Canvas {
@@ -23,6 +24,7 @@ class MouseDrawer extends Canvas {
         this.position = null;
         this.count = false;
         this.img = new Image();
+        this.t = 0.5;
         this.listen();
     }
 
@@ -63,7 +65,6 @@ class MouseDrawer extends Canvas {
 
             this.saved = this.canvas.toDataURL();
             this.draw(this.ctx, line);
-            //MouseDrawer.drawLine(this.ctx, arr);
         } else {
             this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
             this.ctx.drawImage(this.img, 0, 0, this.canvas.width, this.canvas.height);
@@ -82,17 +83,8 @@ class MouseDrawer extends Canvas {
                 start: this.position,
                 end: currentPosition,
             };
-            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
             this.draw(this.ctx, line);
-            //MouseDrawer.drawLine(this.ctx, arr);
-
-            for (let i = 0; i < arr.length; i++) {
-                this.point = MouseDrawer.getIntersection(arr[i].start, arr[i].end, this.position, currentPosition);
-                if (this.point) {
-                    MouseDrawer.drawDot(this.ctx, this.point)
-                }
-            }
         }
     }
 
@@ -134,8 +126,15 @@ class MouseDrawer extends Canvas {
             ctx.lineCap = lineCap;
             ctx.strokeStyle = strokeStyle;
             ctx.stroke();
+            for (let i = 0; i < arr.length; i++) {
+                this.point = MouseDrawer.getIntersection(arr[i].start, arr[i].end, start, end);
+                if (this.point) {
+                    MouseDrawer.drawDot(this.ctx, this.point)
+                }
+            }
         };
     }
+
 
     static drawDot(ctx, point) {
         ctx.beginPath();
@@ -154,9 +153,14 @@ class MouseDrawer extends Canvas {
         const top = (D.x - C.x) * (A.y - C.y) - (D.y - C.y) * (A.x - C.x);
         const bottom = (D.y - C.y) * (B.x - A.x) - (D.x - C.x) * (B.y - A.y);
 
-        if (bottom !== 0) {
+        const top1 = (B.x - A.x) * (C.y - A.y) - (B.y - A.y) * (C.x - A.x);
+        const bottom1 = (B.y - A.y) * (D.x - C.x) - (B.x - A.x) * (D.y - C.y);
+
+        if (bottom1 !== 0 && bottom !== 0) {
+            const t1 = top1 / bottom1;
             const t = top / bottom;
-            if (t >= 0 && t <= 1) {
+
+            if ((t1 >= 0 && t1 <= 1) && (t >= 0 && t <= 1)) {
                 return {
                     x: MouseDrawer.lerp(A.x, B.x, t),
                     y: MouseDrawer.lerp(A.y, B.y, t)
@@ -168,3 +172,47 @@ class MouseDrawer extends Canvas {
 }
 
 new MouseDrawer(canvasRef);
+const cont = canvasRef.getContext("2d");
+let time = 0;
+let a = {x: 200, y: 150};
+let b = {x: 150, y: 250};
+
+function dr(A,B) {
+    cont.clearRect(0, 0, canvasRef.width, canvasRef.height);
+    cont.beginPath();
+    cont.moveTo(A.x, A.y);
+    cont.lineTo(B.x, B.y);
+    cont.stroke();
+}
+
+function animate() {
+    dr(a,b);
+    /*arr.forEach((item) => {
+        console.log(item);
+        dr(item.start,item.end);
+    });*/
+    a = {
+        x: MouseDrawer.lerp(a.x, b.x, time),
+        y: MouseDrawer.lerp(a.y, b.y, time)
+    };
+    b = {
+        x: MouseDrawer.lerp(b.x, a.x, time),
+        y: MouseDrawer.lerp(b.y, a.y, time)
+    };
+
+    // MouseDrawer.drawDot(cont,A);
+    // MouseDrawer.drawDot(cont,B);
+    time += 0.0003;
+    requestAnimationFrame(animate)
+}
+
+
+
+
+btn.onclick = () => {
+    /*arr.forEach((item) => {
+        console.log(item)
+        animate(a,b);
+    });*/
+    animate();
+};
