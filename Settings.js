@@ -1,14 +1,15 @@
 const canvasRef = document.querySelector('#canvas');
+const btn = document.querySelector('.btn');
 const context = canvasRef.getContext("2d");
 let img = new Image();
 let arr = [];
 
-
-
-
 function btnCollapseAnimation(duration) {
     if (arr.length > 0) {
         let start = performance.now();
+        canvasRef.style.borderColor = 'red';
+        btn.disabled = true;
+        btn.style.borderColor = 'red';
 
         requestAnimationFrame(function btnCollapseAnimation(time) {
             let timeFraction = (time - start) / duration;
@@ -36,10 +37,12 @@ function btnCollapseAnimation(duration) {
                 context.beginPath();
                 arr = [];
                 img.src = canvasRef.toDataURL();
+                canvasRef.style.borderColor = 'green';
+                btn.style.borderColor = 'green';
+                btn.disabled = false;
             } else {
                 requestAnimationFrame(btnCollapseAnimation);
             }
-
         });
     }
 }
