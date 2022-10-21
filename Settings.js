@@ -1,11 +1,53 @@
 const canvasRef = document.querySelector('#canvas');
-const btn = document.querySelector('#collapse');
+const context = canvasRef.getContext("2d");
+let img = new Image();
 let arr = [];
+
+
+
+
+function btnCollapseAnimation(duration) {
+    if (arr.length > 0) {
+        let start = performance.now();
+
+        requestAnimationFrame(function btnCollapseAnimation(time) {
+            let timeFraction = (time - start) / duration;
+            let progress = timeFraction / (duration / 100);
+
+            context.clearRect(0, 0, canvasRef.width, canvasRef.height);
+
+            for (let i = 0; i < arr.length; i++) {
+                let a = arr[i].start;
+                let b = arr[i].end;
+                MouseDrawer.drawLine(a, b, context);
+                a = {
+                    x: MouseDrawer.lerp(a.x, b.x, progress),
+                    y: MouseDrawer.lerp(a.y, b.y, progress)
+                };
+                b = {
+                    x: MouseDrawer.lerp(b.x, a.x, progress),
+                    y: MouseDrawer.lerp(b.y, a.y, progress)
+                };
+                arr[i] = new Object({start: a, end: b});
+            }
+
+            if (timeFraction > 1) {
+                context.clearRect(0, 0, canvasRef.width, canvasRef.height);
+                context.beginPath();
+                arr = [];
+                img.src = canvasRef.toDataURL();
+            } else {
+                requestAnimationFrame(btnCollapseAnimation);
+            }
+
+        });
+    }
+}
 
 class Canvas {
     constructor(canvas) {
         this.canvas = canvas;
-        this.ctx = canvas.getContext('2d');
+        this.ctx = context;
         this.canvas.width = window.innerWidth - (window.innerWidth / 10);
         this.canvas.height = window.innerHeight - (window.innerHeight / 5);
         this.destroyEvents();
@@ -23,8 +65,7 @@ class MouseDrawer extends Canvas {
         super(canvas);
         this.position = null;
         this.count = false;
-        this.img = new Image();
-        this.t = 0.5;
+
         this.listen();
     }
 
@@ -67,7 +108,7 @@ class MouseDrawer extends Canvas {
             this.draw(this.ctx, line);
         } else {
             this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-            this.ctx.drawImage(this.img, 0, 0, this.canvas.width, this.canvas.height);
+            this.ctx.drawImage(img, 0, 0, this.canvas.width, this.canvas.height);
             this.count = false;
         }
     }
@@ -92,40 +133,20 @@ class MouseDrawer extends Canvas {
         e.preventDefault();
     }
 
-    static drawLine(ctx, arr) {
-        ctx.beginPath();
-        for (let i = 0; i < arr.length; i++) {
-            let start = arr[i].start;
-            let end = arr[i].end;
-            ctx.moveTo(start.x, start.y);
-            ctx.lineTo(end.x, end.y);
-            ctx.stroke();
-        }
-    }
-
     draw(ctx, line) {
         const {
             start,
-            end,
-            lineWidth,
-            lineCap = 'round',
-            strokeStyle
+            end
         } = line;
         if (!start || !end) {
             throw new Error('Start or end of line not defined.')
         }
 
-        this.img.src = this.saved;
-        this.img.onload = () => {
+        img.src = this.saved;
+        img.onload = () => {
             ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-            ctx.drawImage(this.img, 0, 0, this.canvas.width, this.canvas.height);
-            ctx.beginPath();
-            ctx.moveTo(start.x, start.y);
-            ctx.lineTo(end.x, end.y);
-            ctx.lineWidth = lineWidth;
-            ctx.lineCap = lineCap;
-            ctx.strokeStyle = strokeStyle;
-            ctx.stroke();
+            ctx.drawImage(img, 0, 0, this.canvas.width, this.canvas.height);
+            MouseDrawer.drawLine(start, end, ctx);
             for (let i = 0; i < arr.length; i++) {
                 this.point = MouseDrawer.getIntersection(arr[i].start, arr[i].end, start, end);
                 if (this.point) {
@@ -135,6 +156,12 @@ class MouseDrawer extends Canvas {
         };
     }
 
+    static drawLine = (A, B, ctx) => {
+        ctx.beginPath();
+        ctx.moveTo(A.x, A.y);
+        ctx.lineTo(B.x, B.y);
+        ctx.stroke();
+    };
 
     static drawDot(ctx, point) {
         ctx.beginPath();
@@ -172,47 +199,3 @@ class MouseDrawer extends Canvas {
 }
 
 new MouseDrawer(canvasRef);
-const cont = canvasRef.getContext("2d");
-let time = 0;
-let a = {x: 200, y: 150};
-let b = {x: 150, y: 250};
-
-function dr(A,B) {
-    cont.clearRect(0, 0, canvasRef.width, canvasRef.height);
-    cont.beginPath();
-    cont.moveTo(A.x, A.y);
-    cont.lineTo(B.x, B.y);
-    cont.stroke();
-}
-
-function animate() {
-    dr(a,b);
-    /*arr.forEach((item) => {
-        console.log(item);
-        dr(item.start,item.end);
-    });*/
-    a = {
-        x: MouseDrawer.lerp(a.x, b.x, time),
-        y: MouseDrawer.lerp(a.y, b.y, time)
-    };
-    b = {
-        x: MouseDrawer.lerp(b.x, a.x, time),
-        y: MouseDrawer.lerp(b.y, a.y, time)
-    };
-
-    // MouseDrawer.drawDot(cont,A);
-    // MouseDrawer.drawDot(cont,B);
-    time += 0.0003;
-    requestAnimationFrame(animate)
-}
-
-
-
-
-btn.onclick = () => {
-    /*arr.forEach((item) => {
-        console.log(item)
-        animate(a,b);
-    });*/
-    animate();
-};
